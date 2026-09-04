@@ -66,7 +66,7 @@ export function TasksApp() {
         onSync={() => void sync()}
       />
 
-      <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-8">
+      <main className="mx-auto w-full max-w-6xl overflow-x-hidden px-3 py-5 sm:px-4 sm:py-8">
         <SyncBanner online={online} />
 
         <div className="mb-5 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -129,22 +129,25 @@ export function TasksApp() {
             ) : null}
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+          <div className="grid w-full gap-3 sm:grid-cols-2 sm:gap-4">
             {filtered.map((task) => (
-              <Card key={task.id} className="transition-shadow hover:shadow-md">
+              <Card
+                key={task.id}
+                className="min-w-0 max-w-full overflow-hidden transition-shadow hover:shadow-md"
+              >
                 <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <CardTitle className="truncate text-base sm:text-lg">
                         <Link
                           href={`/tasks/${task.id}`}
-                          className="hover:underline"
+                          className="block truncate hover:underline"
                         >
                           {task.title}
                         </Link>
                       </CardTitle>
                       {task.description ? (
-                        <CardDescription className="mt-1 line-clamp-2">
+                        <CardDescription className="mt-1 line-clamp-2 break-words">
                           {task.description}
                         </CardDescription>
                       ) : null}
@@ -154,9 +157,9 @@ export function TasksApp() {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="min-w-0 space-y-3">
                   <pre className="max-h-28 overflow-x-auto overflow-y-hidden rounded-lg bg-[var(--code-bg)] p-3 font-[family-name:var(--font-mono)] text-[12px] leading-relaxed text-[var(--code-fg)]">
-                    <code>
+                    <code className="block max-w-full break-all whitespace-pre-wrap">
                       {task.steps.length
                         ? task.steps.slice(0, 4).join("\n") +
                           (task.steps.length > 4 ? "\n…" : "")
@@ -164,17 +167,22 @@ export function TasksApp() {
                     </code>
                   </pre>
                   <div className="grid grid-cols-3 gap-2">
-                    <Button asChild size="sm" className="min-w-0">
+                    <Button asChild size="sm" className="min-w-0 px-2">
                       <Link href={`/tasks/${task.id}`}>Open</Link>
                     </Button>
-                    <Button asChild size="sm" variant="outline" className="min-w-0">
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="min-w-0 px-2"
+                    >
                       <Link href={`/tasks/${task.id}/edit`}>Edit</Link>
                     </Button>
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="min-w-0"
+                      className="min-w-0 px-2"
                       onClick={async () => {
                         if (!window.confirm("Delete this task?")) return;
                         await remove(task.id);
