@@ -1,9 +1,10 @@
 import Dexie, { type EntityTable } from "dexie";
-import type { LocalCommand, LocalTask, SyncMeta } from "@/lib/types";
+import type { LocalCommand, LocalFolder, LocalTask, SyncMeta } from "@/lib/types";
 
 export type CmdBookDB = Dexie & {
   commands: EntityTable<LocalCommand, "id">;
   tasks: EntityTable<LocalTask, "id">;
+  folders: EntityTable<LocalFolder, "id">;
   syncMeta: EntityTable<SyncMeta, "id">;
 };
 
@@ -23,6 +24,25 @@ export function getDb(userId: string): CmdBookDB {
     tasks: "id, userId, updatedAt, syncStatus, title",
     syncMeta: "id, userId",
   });
+  db.version(3)
+    .stores({
+      commands:
+        "id, userId, folderId, updatedAt, syncStatus, title, isPinned",
+      tasks: "id, userId, updatedAt, syncStatus, title",
+      folders: "id, userId, updatedAt, syncStatus, name",
+      syncMeta: "id, userId",
+    })
+    .upgrade(async (tx) => {
+      const rows = await tx.table("commands").toArray();
+      for (const row of rows) {
+        await tx.table("commands").put({
+          ...row,
+          folderId: row.folderId ?? null,
+          language: row.language ?? "shell",
+          isPinned: row.isPinned ?? false,
+        });
+      }
+    });
 
   dbCache.set(userId, db);
   return db;
@@ -34,9 +54,11 @@ export async function clearUserDb(userId: string) {
   dbCache.delete(userId);
 }
 
+export type SyncMetaKey = "meta" | "tasks-meta" | "folders-meta";
+
 export async function getLastSyncedAt(
   userId: string,
-  key: "meta" | "tasks-meta" = "meta",
+  key: SyncMetaKey = "meta",
 ): Promise<string | null> {
   const db = getDb(userId);
   const meta = await db.syncMeta.get(key);
@@ -46,7 +68,7 @@ export async function getLastSyncedAt(
 export async function setLastSyncedAt(
   userId: string,
   iso: string,
-  key: "meta" | "tasks-meta" = "meta",
+  key: SyncMetaKey = "meta",
 ) {
   const db = getDb(userId);
   await db.syncMeta.put({ id: key, userId, lastSyncedAt: iso });

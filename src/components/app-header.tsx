@@ -1,9 +1,19 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { BookMarked, ListChecks, LogOut, Terminal, User } from "lucide-react";
+import {
+  BookMarked,
+  Download,
+  ListChecks,
+  LogOut,
+  Terminal,
+  Upload,
+  User,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +24,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SyncStatus } from "@/components/sync-status";
+import {
+  downloadJson,
+  exportUserData,
+  importUserData,
+} from "@/lib/db/backup";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -26,14 +41,52 @@ export function AppHeader({
   syncing,
   pendingCount,
   onSync,
+  onDataChange,
 }: {
   online: boolean;
   syncing: boolean;
   pendingCount: number;
   onSync: () => void;
+  onDataChange?: () => void;
 }) {
   const { data } = useSession();
   const pathname = usePathname();
+  const importRef = useRef<HTMLInputElement>(null);
+  const userId = data?.user?.id;
+
+  async function handleExport() {
+    if (!userId) return;
+    try {
+      const payload = await exportUserData(userId);
+      downloadJson(
+        `cmd-book-export-${new Date().toISOString().slice(0, 10)}.json`,
+        payload,
+      );
+      toast.success("Export downloaded");
+    } catch (error) {
+      console.error(error);
+      toast.error("Export failed");
+    }
+  }
+
+  async function handleImportFile(file: File) {
+    if (!userId) return;
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text) as unknown;
+      const result = await importUserData(userId, json);
+      toast.success(
+        `Imported ${result.commands} commands, ${result.tasks} tasks, ${result.folders} folders`,
+      );
+      onDataChange?.();
+      onSync();
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error instanceof Error ? error.message : "Import failed",
+      );
+    }
+  }
 
   return (
     <>
@@ -100,6 +153,13 @@ export function AppHeader({
                   {data?.user?.name || data?.user?.email || "Signed in"}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => void handleExport()}>
+                  <Download /> Export JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => importRef.current?.click()}>
+                  <Upload /> Import JSON
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => signOut({ callbackUrl: "/login" })}
                 >
@@ -107,6 +167,17 @@ export function AppHeader({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) void handleImportFile(file);
+              }}
+            />
           </div>
         </div>
       </header>

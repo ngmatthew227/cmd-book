@@ -52,6 +52,37 @@ body {
   background: rgba(15, 118, 110, 0.2);
 }
 
+/* highlight.js — dark code surfaces */
+.hljs {
+  background: transparent;
+  color: #d7f5e8;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in {
+  color: #7dd3c0;
+}
+.hljs-string,
+.hljs-attr {
+  color: #f0c674;
+}
+.hljs-number,
+.hljs-literal {
+  color: #b5cea8;
+}
+.hljs-comment {
+  color: #6a857a;
+  font-style: italic;
+}
+.hljs-title,
+.hljs-section {
+  color: #9cdcfe;
+}
+.hljs-meta,
+.hljs-variable {
+  color: #ce9178;
+}
+
 /* Avoid iOS zoom on focused inputs */
 @media (max-width: 640px) {
   input,

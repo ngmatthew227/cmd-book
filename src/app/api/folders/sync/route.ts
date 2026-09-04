@@ -5,13 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 const changeSchema = z.object({
   id: z.string().uuid(),
-  folderId: z.string().uuid().nullable().optional(),
-  title: z.string().min(1).max(200),
-  command: z.string().min(1),
-  description: z.string().nullable().optional(),
-  tags: z.array(z.string().max(40)).max(20).default([]),
-  language: z.string().max(40).default("shell"),
-  isPinned: z.boolean().default(false),
+  name: z.string().min(1).max(120),
   isDeleted: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -42,41 +36,24 @@ export async function POST(request: Request) {
     const accepted: string[] = [];
 
     for (const change of changes) {
-      const existing = await prisma.command.findUnique({
+      const existing = await prisma.folder.findUnique({
         where: { id: change.id },
       });
-
       const clientUpdatedAt = new Date(change.updatedAt);
       const clientCreatedAt = new Date(change.createdAt);
-      let folderId = change.folderId ?? null;
-      if (folderId) {
-        const folder = await prisma.folder.findFirst({
-          where: { id: folderId, userId, isDeleted: false },
-        });
-        if (!folder) folderId = null;
-      }
 
-      if (existing && existing.userId !== userId) {
-        continue;
-      }
+      if (existing && existing.userId !== userId) continue;
 
       if (!existing) {
         if (change.isDeleted || change.syncStatus === "pending_delete") {
           accepted.push(change.id);
           continue;
         }
-
-        await prisma.command.create({
+        await prisma.folder.create({
           data: {
             id: change.id,
             userId,
-            folderId,
-            title: change.title,
-            command: change.command,
-            description: change.description ?? null,
-            tags: change.tags,
-            language: change.language || "shell",
-            isPinned: change.isPinned,
+            name: change.name,
             isDeleted: false,
             createdAt: clientCreatedAt,
             updatedAt: clientUpdatedAt,
@@ -87,16 +64,10 @@ export async function POST(request: Request) {
       }
 
       if (clientUpdatedAt >= existing.updatedAt) {
-        await prisma.command.update({
+        await prisma.folder.update({
           where: { id: change.id },
           data: {
-            folderId,
-            title: change.title,
-            command: change.command,
-            description: change.description ?? null,
-            tags: change.tags,
-            language: change.language || "shell",
-            isPinned: change.isPinned,
+            name: change.name,
             isDeleted: change.isDeleted || change.syncStatus === "pending_delete",
             updatedAt: clientUpdatedAt,
           },
@@ -108,35 +79,24 @@ export async function POST(request: Request) {
     }
 
     const since = lastSyncedAt ? new Date(lastSyncedAt) : new Date(0);
-    const serverChanges = await prisma.command.findMany({
-      where: {
-        userId,
-        updatedAt: { gt: since },
-      },
+    const serverChanges = await prisma.folder.findMany({
+      where: { userId, updatedAt: { gt: since } },
       orderBy: { updatedAt: "asc" },
     });
 
-    const serverTime = new Date().toISOString();
-
     return NextResponse.json({
       accepted,
-      serverChanges: serverChanges.map((c) => ({
-        id: c.id,
-        folderId: c.folderId,
-        title: c.title,
-        command: c.command,
-        description: c.description,
-        tags: c.tags,
-        language: c.language,
-        isPinned: c.isPinned,
-        isDeleted: c.isDeleted,
-        createdAt: c.createdAt.toISOString(),
-        updatedAt: c.updatedAt.toISOString(),
+      serverChanges: serverChanges.map((f) => ({
+        id: f.id,
+        name: f.name,
+        isDeleted: f.isDeleted,
+        createdAt: f.createdAt.toISOString(),
+        updatedAt: f.updatedAt.toISOString(),
       })),
-      serverTime,
+      serverTime: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("sync error", error);
+    console.error("folder sync error", error);
     return NextResponse.json({ error: "Sync failed" }, { status: 500 });
   }
 }

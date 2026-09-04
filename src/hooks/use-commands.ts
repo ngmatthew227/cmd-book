@@ -7,13 +7,21 @@ import {
   deleteLocalCommand,
   listLocalCommands,
   runSync,
+  togglePinLocalCommand,
   updateLocalCommand,
 } from "@/lib/db/sync";
-import type { LocalCommand } from "@/lib/types";
+import {
+  createLocalFolder,
+  deleteLocalFolder,
+  listLocalFolders,
+  renameLocalFolder,
+} from "@/lib/db/folders";
+import type { LocalCommand, LocalFolder } from "@/lib/types";
 import { useOnline } from "@/hooks/use-online";
 
 export function useCommands(userId: string | undefined) {
   const [commands, setCommands] = useState<LocalCommand[]>([]);
+  const [folders, setFolders] = useState<LocalFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const online = useOnline();
@@ -21,11 +29,16 @@ export function useCommands(userId: string | undefined) {
   const refresh = useCallback(async () => {
     if (!userId) {
       setCommands([]);
+      setFolders([]);
       setLoading(false);
       return;
     }
-    const rows = await listLocalCommands(userId);
-    setCommands(rows);
+    const [cmds, folds] = await Promise.all([
+      listLocalCommands(userId),
+      listLocalFolders(userId),
+    ]);
+    setCommands(cmds);
+    setFolders(folds);
     setLoading(false);
   }, [userId]);
 
@@ -73,6 +86,9 @@ export function useCommands(userId: string | undefined) {
       command: string;
       description?: string | null;
       tags?: string[];
+      language?: string;
+      folderId?: string | null;
+      isPinned?: boolean;
     }) => {
       if (!userId) return;
       await createLocalCommand(userId, input);
@@ -90,10 +106,23 @@ export function useCommands(userId: string | undefined) {
         command: string;
         description?: string | null;
         tags?: string[];
+        language?: string;
+        folderId?: string | null;
+        isPinned?: boolean;
       },
     ) => {
       if (!userId) return;
       await updateLocalCommand(userId, id, input);
+      await refresh();
+      if (navigator.onLine) void sync();
+    },
+    [userId, refresh, sync],
+  );
+
+  const togglePin = useCallback(
+    async (id: string) => {
+      if (!userId) return;
+      await togglePinLocalCommand(userId, id);
       await refresh();
       if (navigator.onLine) void sync();
     },
@@ -110,8 +139,39 @@ export function useCommands(userId: string | undefined) {
     [userId, refresh, sync],
   );
 
+  const createFolder = useCallback(
+    async (name: string) => {
+      if (!userId) return;
+      await createLocalFolder(userId, name);
+      await refresh();
+      if (navigator.onLine) void sync();
+    },
+    [userId, refresh, sync],
+  );
+
+  const renameFolder = useCallback(
+    async (id: string, name: string) => {
+      if (!userId) return;
+      await renameLocalFolder(userId, id, name);
+      await refresh();
+      if (navigator.onLine) void sync();
+    },
+    [userId, refresh, sync],
+  );
+
+  const removeFolder = useCallback(
+    async (id: string) => {
+      if (!userId) return;
+      await deleteLocalFolder(userId, id);
+      await refresh();
+      if (navigator.onLine) void sync();
+    },
+    [userId, refresh, sync],
+  );
+
   return {
     commands,
+    folders,
     loading,
     syncing,
     online,
@@ -119,6 +179,10 @@ export function useCommands(userId: string | undefined) {
     sync,
     create,
     update,
+    togglePin,
     remove,
+    createFolder,
+    renameFolder,
+    removeFolder,
   };
 }

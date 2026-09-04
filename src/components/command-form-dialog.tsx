@@ -13,13 +13,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { LocalCommand } from "@/lib/types";
+import { COMMAND_LANGUAGES, type LocalCommand, type LocalFolder } from "@/lib/types";
 
 type FormState = {
   title: string;
   command: string;
   description: string;
   tags: string;
+  language: string;
+  folderId: string;
+  isPinned: boolean;
 };
 
 const empty: FormState = {
@@ -27,22 +30,32 @@ const empty: FormState = {
   command: "",
   description: "",
   tags: "",
+  language: "shell",
+  folderId: "",
+  isPinned: false,
 };
 
 export function CommandFormDialog({
   open,
   onOpenChange,
   initial,
+  folders,
+  defaultFolderId,
   onSubmit,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initial?: LocalCommand | null;
+  folders: LocalFolder[];
+  defaultFolderId?: string | null;
   onSubmit: (values: {
     title: string;
     command: string;
     description: string | null;
     tags: string[];
+    language: string;
+    folderId: string | null;
+    isPinned: boolean;
   }) => Promise<void> | void;
 }) {
   const [form, setForm] = useState<FormState>(empty);
@@ -56,11 +69,17 @@ export function CommandFormDialog({
         command: initial.command,
         description: initial.description ?? "",
         tags: initial.tags.join(", "),
+        language: initial.language || "shell",
+        folderId: initial.folderId ?? "",
+        isPinned: Boolean(initial.isPinned),
       });
     } else {
-      setForm(empty);
+      setForm({
+        ...empty,
+        folderId: defaultFolderId ?? "",
+      });
     }
-  }, [open, initial]);
+  }, [open, initial, defaultFolderId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,6 +94,9 @@ export function CommandFormDialog({
           .split(",")
           .map((t) => t.trim())
           .filter(Boolean),
+        language: form.language || "shell",
+        folderId: form.folderId || null,
+        isPinned: form.isPinned,
       });
       onOpenChange(false);
     } finally {
@@ -115,6 +137,43 @@ export function CommandFormDialog({
               required
             />
           </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="language">Language</Label>
+              <select
+                id="language"
+                value={form.language}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, language: e.target.value }))
+                }
+                className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-3 text-sm"
+              >
+                {COMMAND_LANGUAGES.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="folder">Folder</Label>
+              <select
+                id="folder"
+                value={form.folderId}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, folderId: e.target.value }))
+                }
+                className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-3 text-sm"
+              >
+                <option value="">No folder</option>
+                {folders.map((folder) => (
+                  <option key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -135,6 +194,17 @@ export function CommandFormDialog({
               placeholder="git, docker, comma-separated"
             />
           </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.isPinned}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, isPinned: e.target.checked }))
+              }
+              className="size-4 accent-[var(--primary)]"
+            />
+            Pin to top
+          </label>
           <DialogFooter>
             <Button
               type="button"

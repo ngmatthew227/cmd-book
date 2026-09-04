@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { getDb, getLastSyncedAt, setLastSyncedAt } from "@/lib/db/dexie";
+import { runFolderSync } from "@/lib/db/folders";
 import { runTaskSync } from "@/lib/db/tasks";
 import type {
   LocalCommand,
@@ -12,16 +13,24 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function sortCommands(a: LocalCommand, b: LocalCommand) {
+  if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+  return b.updatedAt.localeCompare(a.updatedAt);
+}
+
 export async function listLocalCommands(userId: string): Promise<LocalCommand[]> {
   const db = getDb(userId);
-  const all = await db.commands
-    .where("userId")
-    .equals(userId)
-    .toArray();
+  const all = await db.commands.where("userId").equals(userId).toArray();
 
   return all
     .filter((c) => c.syncStatus !== "pending_delete" && !c.isDeleted)
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    .map((c) => ({
+      ...c,
+      folderId: c.folderId ?? null,
+      language: c.language || "shell",
+      isPinned: Boolean(c.isPinned),
+    }))
+    .sort(sortCommands);
 }
 
 export async function createLocalCommand(
@@ -31,6 +40,9 @@ export async function createLocalCommand(
     command: string;
     description?: string | null;
     tags?: string[];
+    language?: string;
+    folderId?: string | null;
+    isPinned?: boolean;
   },
 ): Promise<LocalCommand> {
   const db = getDb(userId);
@@ -38,10 +50,13 @@ export async function createLocalCommand(
   const record: LocalCommand = {
     id: uuidv4(),
     userId,
+    folderId: input.folderId ?? null,
     title: input.title.trim(),
     command: input.command,
     description: input.description?.trim() || null,
     tags: input.tags ?? [],
+    language: input.language || "shell",
+    isPinned: input.isPinned ?? false,
     isDeleted: false,
     createdAt: stamp,
     updatedAt: stamp,
@@ -59,6 +74,9 @@ export async function updateLocalCommand(
     command: string;
     description?: string | null;
     tags?: string[];
+    language?: string;
+    folderId?: string | null;
+    isPinned?: boolean;
   },
 ): Promise<LocalCommand | null> {
   const db = getDb(userId);
@@ -67,10 +85,15 @@ export async function updateLocalCommand(
 
   const next: LocalCommand = {
     ...existing,
+    folderId:
+      input.folderId !== undefined ? input.folderId : (existing.folderId ?? null),
     title: input.title.trim(),
     command: input.command,
     description: input.description?.trim() || null,
     tags: input.tags ?? [],
+    language: input.language || existing.language || "shell",
+    isPinned:
+      input.isPinned !== undefined ? input.isPinned : Boolean(existing.isPinned),
     updatedAt: nowIso(),
     syncStatus:
       existing.syncStatus === "pending_insert"
@@ -79,6 +102,21 @@ export async function updateLocalCommand(
   };
   await db.commands.put(next);
   return next;
+}
+
+export async function togglePinLocalCommand(userId: string, id: string) {
+  const db = getDb(userId);
+  const existing = await db.commands.get(id);
+  if (!existing || existing.userId !== userId) return null;
+  return updateLocalCommand(userId, id, {
+    title: existing.title,
+    command: existing.command,
+    description: existing.description,
+    tags: existing.tags,
+    language: existing.language || "shell",
+    folderId: existing.folderId ?? null,
+    isPinned: !existing.isPinned,
+  });
 }
 
 export async function deleteLocalCommand(userId: string, id: string) {
@@ -99,6 +137,33 @@ export async function deleteLocalCommand(userId: string, id: string) {
   });
 }
 
+export async function upsertLocalCommand(
+  userId: string,
+  record: Omit<LocalCommand, "userId" | "syncStatus"> & {
+    syncStatus?: LocalCommand["syncStatus"];
+  },
+) {
+  const db = getDb(userId);
+  const existing = await db.commands.get(record.id);
+  const next: LocalCommand = {
+    ...record,
+    userId,
+    folderId: record.folderId ?? null,
+    language: record.language || "shell",
+    isPinned: Boolean(record.isPinned),
+    syncStatus:
+      record.syncStatus ??
+      (existing
+        ? existing.syncStatus === "pending_insert"
+          ? "pending_insert"
+          : "pending_update"
+        : "pending_insert"),
+  };
+  if (existing && existing.updatedAt > next.updatedAt) return existing;
+  await db.commands.put(next);
+  return next;
+}
+
 let syncInFlight: Promise<void> | null = null;
 
 export async function runSync(userId: string): Promise<void> {
@@ -106,6 +171,8 @@ export async function runSync(userId: string): Promise<void> {
   if (syncInFlight) return syncInFlight;
 
   syncInFlight = (async () => {
+    await runFolderSync(userId);
+
     const db = getDb(userId);
     const pending = await db.commands
       .where("syncStatus")
@@ -116,10 +183,13 @@ export async function runSync(userId: string): Promise<void> {
       .filter((c) => c.userId === userId)
       .map((c) => ({
         id: c.id,
+        folderId: c.folderId ?? null,
         title: c.title,
         command: c.command,
         description: c.description,
         tags: c.tags,
+        language: c.language || "shell",
+        isPinned: Boolean(c.isPinned),
         isDeleted: c.isDeleted || c.syncStatus === "pending_delete",
         createdAt: c.createdAt,
         updatedAt: c.updatedAt,
@@ -163,22 +233,22 @@ export async function runSync(userId: string): Promise<void> {
           continue;
         }
 
+        const normalized = {
+          ...remote,
+          folderId: remote.folderId ?? null,
+          language: remote.language || "shell",
+          isPinned: Boolean(remote.isPinned),
+          userId,
+          syncStatus: "synced" as const,
+        };
+
         if (!local) {
-          await db.commands.put({
-            ...remote,
-            userId,
-            syncStatus: "synced",
-          });
+          await db.commands.put(normalized);
           continue;
         }
 
-        // LWW: remote wins when newer
         if (remote.updatedAt > local.updatedAt) {
-          await db.commands.put({
-            ...remote,
-            userId,
-            syncStatus: "synced",
-          });
+          await db.commands.put(normalized);
         } else if (
           remote.updatedAt < local.updatedAt &&
           local.syncStatus === "synced"

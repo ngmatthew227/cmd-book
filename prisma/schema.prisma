@@ -15,6 +15,7 @@ model User {
   emailVerified DateTime?
   image         String?
   accounts      Account[]
+  folders       Folder[]
   commands      Command[]
   tasks         Task[]
   createdAt     DateTime  @default(now())
@@ -39,19 +40,37 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model Folder {
+  id        String    @id // Client-generated UUID
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isDeleted Boolean   @default(false)
+  commands  Command[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
 model Command {
   id          String   @id // Client-generated UUID
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId    String?
+  folder      Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
   title       String
   command     String   @db.Text
   description String?  @db.Text
   tags        String[]
+  language    String   @default("shell")
+  isPinned    Boolean  @default(false)
   isDeleted   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId, updatedAt])
+  @@index([userId, folderId])
 }
 
 model Task {

@@ -53,8 +53,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Features
 
-- **Commands** — store snippets, one-click copy, tags, search
+- **Commands** — store snippets, one-click copy, tags (click to filter), pin, folders, language + syntax highlight
 - **Tasks** — combine multiple commands into a workflow; detail page copies each step one by one; edit all steps in a multi-line editor
+- **Search** — press `⌘K` / `Ctrl+K` for global command & task search
+- **Import / Export** — JSON backup from the account menu
 
 ## Scripts
 

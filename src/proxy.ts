@@ -7,7 +7,8 @@ export default auth((req) => {
 
   if (
     (pathname.startsWith("/api/commands") ||
-      pathname.startsWith("/api/tasks")) &&
+      pathname.startsWith("/api/tasks") ||
+      pathname.startsWith("/api/folders")) &&
     !isLoggedIn
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,6 +36,7 @@ export const config = {
     "/tasks/:path*",
     "/api/commands/:path*",
     "/api/tasks/:path*",
+    "/api/folders/:path*",
     "/login",
     "/register",
   ],

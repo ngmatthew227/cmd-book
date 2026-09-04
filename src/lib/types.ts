@@ -4,13 +4,42 @@ export type SyncStatus =
   | "pending_update"
   | "pending_delete";
 
+export const COMMAND_LANGUAGES = [
+  "shell",
+  "bash",
+  "powershell",
+  "javascript",
+  "typescript",
+  "python",
+  "sql",
+  "json",
+  "yaml",
+  "dockerfile",
+  "plaintext",
+] as const;
+
+export type CommandLanguage = (typeof COMMAND_LANGUAGES)[number];
+
+export interface LocalFolder {
+  id: string;
+  userId: string;
+  name: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  syncStatus: SyncStatus;
+}
+
 export interface LocalCommand {
   id: string;
   userId: string;
+  folderId: string | null;
   title: string;
   command: string;
   description: string | null;
   tags: string[];
+  language: string;
+  isPinned: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -30,17 +59,20 @@ export interface LocalTask {
 }
 
 export interface SyncMeta {
-  id: string; // "meta" | "tasks-meta"
+  id: string; // "meta" | "tasks-meta" | "folders-meta"
   userId: string;
   lastSyncedAt: string | null;
 }
 
 export interface SyncPushItem {
   id: string;
+  folderId: string | null;
   title: string;
   command: string;
   description: string | null;
   tags: string[];
+  language: string;
+  isPinned: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -49,10 +81,13 @@ export interface SyncPushItem {
 
 export interface SyncPullItem {
   id: string;
+  folderId: string | null;
   title: string;
   command: string;
   description: string | null;
   tags: string[];
+  language: string;
+  isPinned: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -99,4 +134,63 @@ export interface TaskSyncResponse {
   accepted: string[];
   serverChanges: TaskSyncPullItem[];
   serverTime: string;
+}
+
+export interface FolderSyncPushItem {
+  id: string;
+  name: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  syncStatus: Exclude<SyncStatus, "synced">;
+}
+
+export interface FolderSyncPullItem {
+  id: string;
+  name: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FolderSyncRequest {
+  changes: FolderSyncPushItem[];
+  lastSyncedAt: string | null;
+}
+
+export interface FolderSyncResponse {
+  accepted: string[];
+  serverChanges: FolderSyncPullItem[];
+  serverTime: string;
+}
+
+export interface ExportPayload {
+  version: 1;
+  exportedAt: string;
+  folders: Array<{
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  commands: Array<{
+    id: string;
+    folderId: string | null;
+    title: string;
+    command: string;
+    description: string | null;
+    tags: string[];
+    language: string;
+    isPinned: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  tasks: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    steps: string[];
+    createdAt: string;
+    updatedAt: string;
+  }>;
 }

@@ -92,7 +92,7 @@ export function TaskDetailApp({ taskId }: { taskId: string }) {
         onSync={() => void sync()}
       />
 
-      <main className="mx-auto max-w-3xl px-3 py-5 sm:px-4 sm:py-8">
+      <main className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8">
         <SyncBanner online={online} />
 
         <div className="mb-5 space-y-4 sm:mb-6">
