@@ -5,11 +5,18 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
 
-  if (pathname.startsWith("/api/commands") && !isLoggedIn) {
+  if (
+    (pathname.startsWith("/api/commands") ||
+      pathname.startsWith("/api/tasks")) &&
+    !isLoggedIn
+  ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (pathname.startsWith("/library") && !isLoggedIn) {
+  if (
+    (pathname.startsWith("/library") || pathname.startsWith("/tasks")) &&
+    !isLoggedIn
+  ) {
     const login = new URL("/login", req.nextUrl.origin);
     login.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(login);
@@ -23,5 +30,12 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/library/:path*", "/api/commands/:path*", "/login", "/register"],
+  matcher: [
+    "/library/:path*",
+    "/tasks/:path*",
+    "/api/commands/:path*",
+    "/api/tasks/:path*",
+    "/login",
+    "/register",
+  ],
 };

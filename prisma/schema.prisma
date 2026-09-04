@@ -16,6 +16,7 @@ model User {
   image         String?
   accounts      Account[]
   commands      Command[]
+  tasks         Task[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -46,6 +47,20 @@ model Command {
   command     String   @db.Text
   description String?  @db.Text
   tags        String[]
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model Task {
+  id          String   @id // Client-generated UUID
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?  @db.Text
+  steps       String[] // Ordered command lines
   isDeleted   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -17,8 +17,20 @@ export interface LocalCommand {
   syncStatus: SyncStatus;
 }
 
+export interface LocalTask {
+  id: string;
+  userId: string;
+  title: string;
+  description: string | null;
+  steps: string[];
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  syncStatus: SyncStatus;
+}
+
 export interface SyncMeta {
-  id: string; // always "meta"
+  id: string; // "meta" | "tasks-meta"
   userId: string;
   lastSyncedAt: string | null;
 }
@@ -54,5 +66,37 @@ export interface SyncRequest {
 export interface SyncResponse {
   accepted: string[];
   serverChanges: SyncPullItem[];
+  serverTime: string;
+}
+
+export interface TaskSyncPushItem {
+  id: string;
+  title: string;
+  description: string | null;
+  steps: string[];
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  syncStatus: Exclude<SyncStatus, "synced">;
+}
+
+export interface TaskSyncPullItem {
+  id: string;
+  title: string;
+  description: string | null;
+  steps: string[];
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskSyncRequest {
+  changes: TaskSyncPushItem[];
+  lastSyncedAt: string | null;
+}
+
+export interface TaskSyncResponse {
+  accepted: string[];
+  serverChanges: TaskSyncPullItem[];
   serverTime: string;
 }

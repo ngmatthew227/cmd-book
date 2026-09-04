@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { getDb, getLastSyncedAt, setLastSyncedAt } from "@/lib/db/dexie";
+import { runTaskSync } from "@/lib/db/tasks";
 import type {
   LocalCommand,
   SyncPushItem,
@@ -188,6 +189,8 @@ export async function runSync(userId: string): Promise<void> {
 
       await setLastSyncedAt(userId, data.serverTime);
     });
+
+    await runTaskSync(userId);
   })().finally(() => {
     syncInFlight = null;
   });

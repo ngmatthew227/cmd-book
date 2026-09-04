@@ -48,8 +48,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. UI reads/writes IndexedDB via Dexie (`cmd-book-${userId}`).
 2. Each record tracks `syncStatus`: `synced | pending_insert | pending_update | pending_delete`.
-3. When online, the client POSTs pending changes to `/api/commands/sync` and pulls remote updates newer than `lastSyncedAt`.
+3. When online, the client POSTs pending changes to `/api/commands/sync` and `/api/tasks/sync`, then pulls remote updates newer than `lastSyncedAt`.
 4. Conflicts use **Last-Write-Wins** on `updatedAt`.
+
+## Features
+
+- **Commands** — store snippets, one-click copy, tags, search
+- **Tasks** — combine multiple commands into a workflow; edit all steps in one multi-line editor; insert from your command library
 
 ## Scripts
 
