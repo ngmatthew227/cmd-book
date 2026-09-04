@@ -48,7 +48,7 @@ export function LibraryApp() {
   }, [commands, query]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <AppHeader
         online={online}
         syncing={syncing}
@@ -56,12 +56,12 @@ export function LibraryApp() {
         onSync={() => void sync()}
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-8">
         <SyncBanner online={online} />
 
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">
+        <div className="mb-5 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-tight sm:text-3xl">
               Your commands
             </h1>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
@@ -69,6 +69,7 @@ export function LibraryApp() {
             </p>
           </div>
           <Button
+            className="w-full shrink-0 sm:w-auto"
             onClick={() => {
               setEditing(null);
               setDialogOpen(true);
@@ -78,7 +79,7 @@ export function LibraryApp() {
           </Button>
         </div>
 
-        <div className="relative mb-6 max-w-md">
+        <div className="relative mb-5 w-full sm:mb-6 sm:max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
           <Input
             className="pl-9"
@@ -89,7 +90,7 @@ export function LibraryApp() {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
@@ -98,7 +99,7 @@ export function LibraryApp() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]/60 px-6 py-16 text-center">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]/60 px-4 py-12 text-center sm:px-6 sm:py-16">
             <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
               <Terminal className="size-6" />
             </div>
@@ -112,7 +113,7 @@ export function LibraryApp() {
             </p>
             {!query ? (
               <Button
-                className="mt-6"
+                className="mt-6 w-full sm:w-auto"
                 onClick={() => {
                   setEditing(null);
                   setDialogOpen(true);
@@ -123,7 +124,7 @@ export function LibraryApp() {
             ) : null}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             {filtered.map((item) => (
               <CommandCard
                 key={item.id}

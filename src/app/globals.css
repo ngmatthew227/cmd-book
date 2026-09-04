@@ -28,6 +28,10 @@
   --font-mono: var(--font-code);
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background:
     radial-gradient(1200px 500px at 10% -10%, rgba(15, 118, 110, 0.12), transparent 55%),
@@ -36,6 +40,8 @@ body {
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 * {
@@ -44,4 +50,13 @@ body {
 
 ::selection {
   background: rgba(15, 118, 110, 0.2);
+}
+
+/* Avoid iOS zoom on focused inputs */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }

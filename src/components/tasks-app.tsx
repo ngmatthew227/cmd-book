@@ -24,7 +24,8 @@ export function TasksApp() {
   const router = useRouter();
   const { data: session } = useSession();
   const userId = session?.user?.id;
-  const { tasks, loading, syncing, online, sync, create, remove } = useTasks(userId);
+  const { tasks, loading, syncing, online, sync, create, remove } =
+    useTasks(userId);
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
 
@@ -57,7 +58,7 @@ export function TasksApp() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <AppHeader
         online={online}
         syncing={syncing}
@@ -65,24 +66,28 @@ export function TasksApp() {
         onSync={() => void sync()}
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-8">
         <SyncBanner online={online} />
 
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">
+        <div className="mb-5 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-tight sm:text-3xl">
               Tasks
             </h1>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
               Bundle commands into workflows — edit every step on one page.
             </p>
           </div>
-          <Button onClick={() => void handleCreate()} disabled={creating}>
+          <Button
+            className="w-full shrink-0 sm:w-auto"
+            onClick={() => void handleCreate()}
+            disabled={creating}
+          >
             <Plus /> New task
           </Button>
         </div>
 
-        <div className="relative mb-6 max-w-md">
+        <div className="relative mb-5 w-full sm:mb-6 sm:max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
           <Input
             className="pl-9"
@@ -93,7 +98,7 @@ export function TasksApp() {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
@@ -102,7 +107,7 @@ export function TasksApp() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]/60 px-6 py-16 text-center">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]/60 px-4 py-12 text-center sm:px-6 sm:py-16">
             <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
               <ListChecks className="size-6" />
             </div>
@@ -115,22 +120,22 @@ export function TasksApp() {
                 : "Create a task, paste or insert commands, and edit the whole script at once."}
             </p>
             {!query ? (
-              <Button className="mt-6" onClick={() => void handleCreate()}>
+              <Button
+                className="mt-6 w-full sm:w-auto"
+                onClick={() => void handleCreate()}
+              >
                 <Plus /> Create your first task
               </Button>
             ) : null}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             {filtered.map((task) => (
-              <Card
-                key={task.id}
-                className="transition-shadow hover:shadow-md"
-              >
+              <Card key={task.id} className="transition-shadow hover:shadow-md">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <CardTitle className="truncate">
+                      <CardTitle className="truncate text-base sm:text-lg">
                         <Link
                           href={`/tasks/${task.id}`}
                           className="hover:underline"
@@ -144,11 +149,13 @@ export function TasksApp() {
                         </CardDescription>
                       ) : null}
                     </div>
-                    <Badge variant="secondary">{task.steps.length} steps</Badge>
+                    <Badge variant="secondary" className="shrink-0">
+                      {task.steps.length} steps
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <pre className="max-h-28 overflow-hidden rounded-lg bg-[var(--code-bg)] p-3 font-[family-name:var(--font-mono)] text-[12px] leading-relaxed text-[var(--code-fg)]">
+                  <pre className="max-h-28 overflow-x-auto overflow-y-hidden rounded-lg bg-[var(--code-bg)] p-3 font-[family-name:var(--font-mono)] text-[12px] leading-relaxed text-[var(--code-fg)]">
                     <code>
                       {task.steps.length
                         ? task.steps.slice(0, 4).join("\n") +
@@ -156,17 +163,18 @@ export function TasksApp() {
                         : "# empty"}
                     </code>
                   </pre>
-                  <div className="flex gap-2">
-                    <Button asChild size="sm" className="flex-1">
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button asChild size="sm" className="min-w-0">
                       <Link href={`/tasks/${task.id}`}>Open</Link>
                     </Button>
-                    <Button asChild size="sm" variant="outline">
+                    <Button asChild size="sm" variant="outline" className="min-w-0">
                       <Link href={`/tasks/${task.id}/edit`}>Edit</Link>
                     </Button>
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
+                      className="min-w-0"
                       onClick={async () => {
                         if (!window.confirm("Delete this task?")) return;
                         await remove(task.id);

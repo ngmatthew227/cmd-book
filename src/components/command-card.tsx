@@ -81,8 +81,10 @@ export function CommandCard({
         </div>
       </CardHeader>
       <CardContent>
-        <pre className="overflow-x-auto rounded-lg bg-[var(--code-bg)] p-3 font-[family-name:var(--font-mono)] text-[13px] leading-relaxed text-[var(--code-fg)]">
-          <code>{item.command}</code>
+        <pre className="overflow-x-auto rounded-lg bg-[var(--code-bg)] p-2.5 font-[family-name:var(--font-mono)] text-[12px] leading-relaxed text-[var(--code-fg)] sm:p-3 sm:text-[13px]">
+          <code className="break-all whitespace-pre-wrap sm:whitespace-pre sm:break-normal">
+            {item.command}
+          </code>
         </pre>
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">

@@ -11,7 +11,7 @@ export default async function LoginPage() {
   );
 
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
+    <main className="flex flex-1 items-center justify-center px-3 py-8 sm:px-4 sm:py-12">
       <LoginForm githubEnabled={githubEnabled} />
     </main>
   );

@@ -99,7 +99,7 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center pb-20 md:pb-0">
         <Loader2 className="size-6 animate-spin text-[var(--muted-foreground)]" />
       </div>
     );
@@ -107,7 +107,7 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
 
   if (!task) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
+      <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-4 pb-20 text-center md:pb-0">
         <h1 className="text-xl font-semibold">Task not found</h1>
         <Button asChild variant="outline">
           <Link href="/tasks">Back to tasks</Link>
@@ -117,7 +117,7 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-[calc(9.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <AppHeader
         online={online}
         syncing={syncing}
@@ -125,25 +125,29 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
         onSync={() => void sync()}
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-8">
         <SyncBanner online={online} />
 
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
+        <div className="mb-5 space-y-4 sm:mb-6 sm:flex sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:space-y-0">
+          <div className="min-w-0 space-y-2">
             <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
               <Link href={`/tasks/${task.id}`}>
                 <ArrowLeft /> Back to task
               </Link>
             </Button>
-            <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">
+            <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-tight sm:text-3xl">
               Edit task
             </h1>
             <p className="text-sm text-[var(--muted-foreground)]">
               Combine commands into a workflow. Edit every line in one editor.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => void handleCopyAll()}>
+          <div className="hidden flex-wrap gap-2 sm:flex">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleCopyAll()}
+            >
               <Copy /> Copy all
             </Button>
             <Button
@@ -165,7 +169,7 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
           </div>
         </div>
 
-        <div className="mb-6 grid gap-4">
+        <div className="mb-5 grid gap-4 sm:mb-6">
           <div className="space-y-2">
             <Label htmlFor="task-title">Title</Label>
             <Input
@@ -202,6 +206,45 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
           }}
         />
       </main>
+
+      {/* Mobile sticky action bar — sits above bottom nav */}
+      <div
+        className="fixed inset-x-0 z-30 border-t border-[var(--border)] bg-[var(--background)]/95 p-3 backdrop-blur-md md:hidden"
+        style={{
+          bottom: "calc(3.5rem + env(safe-area-inset-bottom))",
+        }}
+      >
+        <div className="mx-auto grid max-w-6xl grid-cols-3 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-w-0"
+            onClick={() => void handleCopyAll()}
+          >
+            <Copy /> Copy
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-w-0 text-red-600"
+            onClick={() => void handleDelete()}
+          >
+            <Trash2 /> Delete
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            className="min-w-0"
+            onClick={() => void handleSave()}
+            disabled={saving || !dirty}
+          >
+            {saving ? <Loader2 className="animate-spin" /> : <Save />}
+            {dirty ? "Save" : "Saved"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
