@@ -7,7 +7,7 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 echo "→ Applying Prisma migrations…"
-./node_modules/.bin/prisma migrate deploy
+prisma migrate deploy
 
 echo "→ Starting cmd-book…"
 exec "$@"
