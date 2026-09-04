@@ -69,6 +69,7 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
       });
       setDirty(false);
       toast.success("Task saved");
+      router.push(`/tasks/${task.id}`);
     } finally {
       setSaving(false);
     }
@@ -130,8 +131,8 @@ export function TaskEditorApp({ taskId }: { taskId: string }) {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
-              <Link href="/tasks">
-                <ArrowLeft /> Tasks
+              <Link href={`/tasks/${task.id}`}>
+                <ArrowLeft /> Back to task
               </Link>
             </Button>
             <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">

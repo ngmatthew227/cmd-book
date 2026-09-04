@@ -49,7 +49,7 @@ export function TasksApp() {
     try {
       const task = await create({ title: "Untitled task", steps: [] });
       if (task) {
-        router.push(`/tasks/${task.id}`);
+        router.push(`/tasks/${task.id}/edit`);
       }
     } finally {
       setCreating(false);
@@ -158,7 +158,10 @@ export function TasksApp() {
                   </pre>
                   <div className="flex gap-2">
                     <Button asChild size="sm" className="flex-1">
-                      <Link href={`/tasks/${task.id}`}>Edit</Link>
+                      <Link href={`/tasks/${task.id}`}>Open</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/tasks/${task.id}/edit`}>Edit</Link>
                     </Button>
                     <Button
                       type="button"

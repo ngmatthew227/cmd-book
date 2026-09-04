@@ -9,9 +9,11 @@ import { cn } from "@/lib/utils";
 export function CopyButton({
   text,
   className,
+  successMessage = "Copied to clipboard",
 }: {
   text: string;
   className?: string;
+  successMessage?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -25,7 +27,7 @@ export function CopyButton({
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      toast.success("Copied to clipboard");
+      toast.success(successMessage);
     } catch {
       toast.error("Unable to copy");
     }

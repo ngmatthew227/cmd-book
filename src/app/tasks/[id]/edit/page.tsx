@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { TaskDetailApp } from "@/components/task-detail-app";
+import { TaskEditorApp } from "@/components/task-editor-app";
 import { auth } from "@/lib/auth";
 
-export default async function TaskDetailPage({
+export default async function TaskEditPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -10,5 +10,5 @@ export default async function TaskDetailPage({
   const session = await auth();
   if (!session?.user) redirect("/login");
   const { id } = await params;
-  return <TaskDetailApp taskId={id} />;
+  return <TaskEditorApp taskId={id} />;
 }

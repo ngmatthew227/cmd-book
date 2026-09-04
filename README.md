@@ -54,7 +54,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Features
 
 - **Commands** — store snippets, one-click copy, tags, search
-- **Tasks** — combine multiple commands into a workflow; edit all steps in one multi-line editor; insert from your command library
+- **Tasks** — combine multiple commands into a workflow; detail page copies each step one by one; edit all steps in a multi-line editor
 
 ## Scripts
 
