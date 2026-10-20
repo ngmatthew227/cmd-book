@@ -51,3 +51,6 @@ next-env.d.ts
 
 
 DEPLOY-DOCKER.md
+*.har
+*.exe
+.vscode/tasks.json
